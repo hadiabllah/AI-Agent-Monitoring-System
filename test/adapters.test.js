@@ -47,3 +47,10 @@ test("both agents produce the same set of fields", () => {
   const b = Object.keys(normalizeCodex(codexSamples[0], "s1")).sort();
   assert.deepStrictEqual(a, b);
 });
+
+test("Codex: older item_type / assistant_message format is understood", () => {
+  const e = normalizeCodex({ type: "item.completed", item: { id: "i", item_type: "assistant_message", text: "Done" } }, "s1");
+  assert.strictEqual(e.type, "message");
+  const c = normalizeCodex({ type: "item.completed", item: { id: "c", item_type: "command_execution", command: "ls", exit_code: 0 } }, "s1");
+  assert.strictEqual(c.type, "command");
+});

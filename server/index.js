@@ -1,6 +1,7 @@
 // Agent Monitor server: receives raw agent events, standardizes them, stores them,
 // and pushes them live to the dashboard over Server-Sent Events (SSE).
 // Uses only Node's built-in modules, so it runs with no `npm install`.
+require("./env"); // load .env before anything reads process.env
 const http = require("http");
 const fs = require("fs");
 const path = require("path");
@@ -32,21 +33,26 @@ const server = http.createServer(async (req, res) => {
       store.saveRaw(agent, body);
       const event = adapter(body);
       if (event) {
-        store.add(event);
+        // Show it live even if saving fails, but report the save error clearly
         broadcast(event);
         console.log(`[${agent}] ${event.type.padEnd(13)} ${event.summary}`);
+        try {
+          await store.add(event);
+        } catch (err) {
+          console.error(`  ✗ not saved: ${err.message}`);
+        }
       }
       return send(res, 200, { ok: true, id: event?.id ?? null });
     }
 
     // GET /api/events  ← dashboard loads history on page open
     if (req.method === "GET" && url.pathname === "/api/events") {
-      return send(res, 200, store.list());
+      return send(res, 200, await store.list());
     }
 
     // DELETE /api/events  ← clear the feed between test runs
     if (req.method === "DELETE" && url.pathname === "/api/events") {
-      store.clear();
+      await store.clear();
       broadcast({ type: "__cleared" });
       return send(res, 200, { ok: true });
     }
@@ -115,6 +121,7 @@ setInterval(() => clients.forEach((c) => c.write(": ping\n\n")), 25000);
 
 server.listen(PORT, () => {
   console.log(`Agent Monitor running → http://localhost:${PORT}`);
+  console.log(`  Storing events in ${store.name}`);
   console.log(`  Claude Code hooks POST to /events/claude-code`);
   console.log(`  Codex runner POSTs to    /events/codex`);
 });

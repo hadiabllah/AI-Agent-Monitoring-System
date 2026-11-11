@@ -18,7 +18,7 @@ Codex ──codex exec --json──► scripts/codex-run.js ──┘           
 |---|---|
 | `server/index.js` | HTTP server: receives events, serves the dashboard, streams live updates (SSE) |
 | `server/adapters/` | One adapter per agent + the standard event format (`common.js`) — **Objective 1** |
-| `server/store.js` | Saves events to `data/events.jsonl` and raw payloads to `data/raw/` (Supabase later) |
+| `server/store/` | Where events are saved: Supabase if `.env` has its keys, otherwise `data/events.jsonl`. Raw payloads always go to `data/raw/` |
 | `web/` | Live activity dashboard — **Objective 2** (first version) |
 | `hooks/forward.js` | Claude Code hook: forwards each hook payload to the server |
 | `scripts/codex-run.js` | Runs a Codex task and streams its JSON events to the server |
@@ -65,6 +65,18 @@ Extra flags are passed through to `codex exec`, e.g. `--full-auto`.
 > `item.completed`, `turn.completed`, …). Codex changes often: after your first real run, open
 > `data/raw/codex.jsonl`, and if any event shows as `other` on the dashboard, update `server/adapters/codex.js`.
 
+## Connect Supabase
+
+1. Create a free project at [supabase.com](https://supabase.com).
+2. **SQL Editor → New query**: paste `supabase/schema.sql`, click **Run**.
+3. **Project Settings → API**: copy the **Project URL** and the **service_role** key.
+4. Copy `.env.example` to `.env` and paste both values in.
+5. Restart `npm start`. The second line should say `Storing events in Supabase (...)`.
+6. Run `npm run samples`, then check **Table Editor → events** in Supabase.
+
+If a save fails, the event still appears on the dashboard and the terminal prints `✗ not saved:` with
+Supabase's error message. Delete the two lines from `.env` to go back to local files.
+
 ## Standard event format
 
 ```json
@@ -83,7 +95,7 @@ Extra flags are passed through to `codex exec`, e.g. `--full-auto`.
 
 ## Build plan (next slices)
 
-1. **Supabase store** – run `supabase/schema.sql`, replace `server/store.js` with Supabase inserts
+1. ~~**Supabase store**~~ – done (see "Connect Supabase")
 2. **React dashboard** – move `web/` to a Vite + React app using Supabase Realtime
 3. **Tasks and statuses** – group events into tasks (pending / in progress / completed / failed)
 4. **Timeline** – chronological view per session, errors highlighted
@@ -94,4 +106,4 @@ Extra flags are passed through to `codex exec`, e.g. `--full-auto`.
 
 - `data/raw/*.jsonl` holds real payloads from each agent: use them in Chapter 4 to show the two formats
   differ and how the adapters standardize them.
-- `npm test` gives you unit tests for the integration layer.
+- `npm test` runs unit tests for the integration layer and the Supabase store (against a fake Supabase server).

@@ -1,6 +1,6 @@
 -- Schema for moving the event store to Supabase (slice 1 of the build plan).
--- Run this in the Supabase SQL editor, then replace server/store.js with a version
--- that inserts into these tables using @supabase/supabase-js.
+-- Run this once in the Supabase SQL editor (Dashboard → SQL Editor → New query → Run).
+-- The server writes to these tables through server/store/supabase.js.
 
 create table if not exists sessions (
   id           text primary key,              -- agent's session / thread id
@@ -46,5 +46,13 @@ create table if not exists screenshots (
   captured_at timestamptz not null default now()
 );
 
--- Enable realtime so the dashboard can subscribe to new events
+-- Lock the tables down. The server uses the service_role key, which bypasses RLS,
+-- so it keeps working. Read policies for logged-in users come with the auth slice.
+alter table sessions    enable row level security;
+alter table events      enable row level security;
+alter table tasks       enable row level security;
+alter table screenshots enable row level security;
+
+-- Enable realtime so the React dashboard can subscribe to new events later.
+-- (If you run this file twice, this line errors with "already member": that's fine.)
 alter publication supabase_realtime add table events;

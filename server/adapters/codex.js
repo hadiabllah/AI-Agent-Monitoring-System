@@ -37,7 +37,9 @@ function normalizeCodex(raw, sessionId) {
 }
 
 function describeItem(item, phase, base) {
-  switch (item.type) {
+  // Older Codex versions use item.item_type and "assistant_message"; newer ones use item.type and "agent_message".
+  const kind = item.type || item.item_type;
+  switch (kind === "assistant_message" ? "agent_message" : kind) {
     case "command_execution": {
       const cmd = item.command || "";
       const failed = phase === "completed" && (item.status === "failed" || (item.exit_code ?? 0) !== 0);
@@ -64,7 +66,7 @@ function describeItem(item, phase, base) {
     case "mcp_tool_call":
       return makeEvent({ ...base, type: "other", status: phase, summary: `Tool: ${item.server || ""} ${item.tool || ""}`.trim() });
     default:
-      return makeEvent({ ...base, type: "other", status: phase, summary: item.type || "Item" });
+      return makeEvent({ ...base, type: "other", status: phase, summary: kind || "Item" });
   }
 }
 

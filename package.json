@@ -9,7 +9,7 @@
     "samples": "node scripts/send-samples.js",
     "install-hooks": "node scripts/install-hooks.js",
     "codex": "node scripts/codex-run.js",
-    "test": "node --test test/adapters.test.js"
+    "test": "node --test test/adapters.test.js test/supabase-store.test.js"
   },
   "engines": {
     "node": ">=18"

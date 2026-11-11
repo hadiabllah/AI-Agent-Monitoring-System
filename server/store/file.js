@@ -4,7 +4,7 @@
 const fs = require("fs");
 const path = require("path");
 
-const DATA_DIR = path.join(__dirname, "..", "data");
+const DATA_DIR = path.join(__dirname, "..", "..", "data");
 const EVENTS_FILE = path.join(DATA_DIR, "events.jsonl");
 const RAW_DIR = path.join(DATA_DIR, "raw");
 
@@ -44,4 +44,4 @@ function clear() {
   if (fs.existsSync(EVENTS_FILE)) fs.unlinkSync(EVENTS_FILE);
 }
 
-module.exports = { add, saveRaw, list, clear };
+module.exports = { name: "local files (data/events.jsonl)", add, saveRaw, list, clear };
