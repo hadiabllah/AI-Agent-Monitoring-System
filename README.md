@@ -4,7 +4,8 @@ A unified real-time monitoring and visualization platform for AI coding agents (
 FYP project – Muhammad Hadi bin Ab Llah, Faculty of Computing, UTM.
 
 This is the **Step 1 starter**: it captures real events from both agents, converts them into one standard
-format, and shows them on a live dashboard. It needs only Node.js 18+ — no `npm install`.
+format, and shows them on a live React dashboard. It needs Node.js 18+. The server uses only built-in
+modules; `npm install` is only needed for the React dashboard (React + Vite).
 
 ## How it works
 
@@ -19,7 +20,7 @@ Codex ──codex exec --json──► scripts/codex-run.js ──┘           
 | `server/index.js` | HTTP server: receives events, serves the dashboard, streams live updates (SSE) |
 | `server/adapters/` | One adapter per agent + the standard event format (`common.js`) — **Objective 1** |
 | `server/store/` | Where events are saved: Supabase if `.env` has its keys, otherwise `data/events.jsonl`. Raw payloads always go to `data/raw/` |
-| `web/` | Live activity dashboard — **Objective 2** (first version) |
+| `web/` | Live activity dashboard in React + Vite — **Objective 2**. Source in `web/src/`, built into `web/dist/` |
 | `hooks/forward.js` | Claude Code hook: forwards each hook payload to the server |
 | `scripts/codex-run.js` | Runs a Codex task and streams its JSON events to the server |
 | `scripts/install-hooks.js` | Adds the hooks to a project's `.claude/settings.json` |
@@ -29,6 +30,10 @@ Codex ──codex exec --json──► scripts/codex-run.js ──┘           
 ## Quick start
 
 ```bash
+# 0. Install the dashboard dependencies and build it (once, and after changing web/src)
+npm install
+npm run build
+
 # 1. Start the server
 npm start
 # open http://localhost:4000
@@ -39,6 +44,9 @@ npm run samples
 # 3. Run the adapter tests
 npm test
 ```
+
+While working on the dashboard, run `npm start` in one terminal and `npm run dev:web` in another, then
+open http://localhost:5173. It reloads as you edit `web/src/`, and sends API calls to the server on port 4000.
 
 ## Connect Claude Code
 
@@ -96,7 +104,7 @@ Supabase's error message. Delete the two lines from `.env` to go back to local f
 ## Build plan (next slices)
 
 1. ~~**Supabase store**~~ – done (see "Connect Supabase")
-2. **React dashboard** – move `web/` to a Vite + React app using Supabase Realtime
+2. ~~**React dashboard**~~ – done (`web/` is now Vite + React; Supabase Realtime still to add)
 3. **Tasks and statuses** – group events into tasks (pending / in progress / completed / failed)
 4. **Timeline** – chronological view per session, errors highlighted
 5. **Screenshots** – Playwright captures the app at `localhost` when a task finishes (**Objective 3**)

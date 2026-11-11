@@ -6,6 +6,8 @@
   "scripts": {
     "start": "node server/index.js",
     "dev": "node --watch server/index.js",
+    "dev:web": "vite --config web/vite.config.js",
+    "build": "vite build --config web/vite.config.js",
     "samples": "node scripts/send-samples.js",
     "install-hooks": "node scripts/install-hooks.js",
     "codex": "node scripts/codex-run.js",
@@ -13,5 +15,13 @@
   },
   "engines": {
     "node": ">=18"
+  },
+  "dependencies": {
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.5.0",
+    "vite": "^6.3.5"
   }
 }
