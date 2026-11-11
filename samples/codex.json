@@ -1,0 +1,10 @@
+[
+  { "type": "thread.started", "thread_id": "codex-sample" },
+  { "type": "turn.started" },
+  { "type": "item.started", "item": { "id": "i1", "type": "command_execution", "command": "ls src", "status": "in_progress" } },
+  { "type": "item.completed", "item": { "id": "i1", "type": "command_execution", "command": "ls src", "exit_code": 0, "status": "completed" } },
+  { "type": "item.completed", "item": { "id": "i2", "type": "file_change", "changes": [{ "path": "src/api/auth.js", "kind": "add" }], "status": "completed" } },
+  { "type": "item.completed", "item": { "id": "i3", "type": "command_execution", "command": "npx vitest run auth", "exit_code": 0, "status": "completed" } },
+  { "type": "item.completed", "item": { "id": "i4", "type": "agent_message", "text": "Added an auth API with login and logout endpoints and tests." } },
+  { "type": "turn.completed", "usage": { "input_tokens": 1200, "output_tokens": 340 } }
+]

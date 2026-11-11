@@ -1,0 +1,49 @@
+// Run with: npm test
+const test = require("node:test");
+const assert = require("node:assert");
+const { normalizeClaudeCode } = require("../server/adapters/claude-code");
+const { normalizeCodex } = require("../server/adapters/codex");
+const claudeSamples = require("../samples/claude-code.json");
+const codexSamples = require("../samples/codex.json");
+
+const REQUIRED = ["id", "agent", "sessionId", "timestamp", "type", "summary"];
+
+test("every Claude Code sample becomes a valid standard event", () => {
+  for (const raw of claudeSamples) {
+    const e = normalizeClaudeCode(raw);
+    for (const key of REQUIRED) assert.ok(e[key], `missing ${key} for ${raw.hook_event_name}`);
+    assert.strictEqual(e.agent, "claude-code");
+  }
+});
+
+test("Claude Code: file edits, tests and failures are classified", () => {
+  const types = claudeSamples.map((r) => normalizeClaudeCode(r).type);
+  assert.ok(types.includes("file_edit"));
+  assert.ok(types.includes("test"));
+  assert.ok(types.includes("error"), "failed npm test should become an error");
+  assert.strictEqual(types.at(-1), "task_done");
+});
+
+test("every Codex sample becomes a valid standard event (or is skipped)", () => {
+  for (const raw of codexSamples) {
+    const e = normalizeCodex(raw, "s1");
+    if (e === null) continue;
+    for (const key of REQUIRED) assert.ok(e[key], `missing ${key} for ${raw.type}`);
+    assert.strictEqual(e.agent, "codex");
+  }
+});
+
+test("Codex: non-zero exit code becomes an error", () => {
+  const e = normalizeCodex(
+    { type: "item.completed", item: { type: "command_execution", command: "npm test", exit_code: 1, status: "failed" } },
+    "s1"
+  );
+  assert.strictEqual(e.type, "error");
+  assert.strictEqual(e.status, "failed");
+});
+
+test("both agents produce the same set of fields", () => {
+  const a = Object.keys(normalizeClaudeCode(claudeSamples[0])).sort();
+  const b = Object.keys(normalizeCodex(codexSamples[0], "s1")).sort();
+  assert.deepStrictEqual(a, b);
+});

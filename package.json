@@ -1,0 +1,17 @@
+{
+  "name": "agent-monitor",
+  "version": "0.1.0",
+  "description": "Unified real-time monitoring and visualization platform for AI coding agents (Claude Code, Codex)",
+  "private": true,
+  "scripts": {
+    "start": "node server/index.js",
+    "dev": "node --watch server/index.js",
+    "samples": "node scripts/send-samples.js",
+    "install-hooks": "node scripts/install-hooks.js",
+    "codex": "node scripts/codex-run.js",
+    "test": "node --test test/adapters.test.js"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
