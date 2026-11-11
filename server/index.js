@@ -1,6 +1,7 @@
 // Agent Monitor server: receives raw agent events, standardizes them, stores them,
 // and pushes them live to the dashboard over Server-Sent Events (SSE).
-// Uses only Node's built-in modules, so it runs with no `npm install`.
+// The server itself uses only Node's built-in modules; the React dashboard is built
+// with Vite (`npm run build`) into web/dist, which is served from here.
 require("./env"); // load .env before anything reads process.env
 const http = require("http");
 const fs = require("fs");
@@ -10,7 +11,7 @@ const { normalizeClaudeCode } = require("./adapters/claude-code");
 const { normalizeCodex } = require("./adapters/codex");
 
 const PORT = Number(process.env.PORT) || 4000;
-const WEB_DIR = path.join(__dirname, "..", "web");
+const WEB_DIR = path.join(__dirname, "..", "web", "dist");
 const clients = new Set(); // open SSE connections
 
 const adapters = {
@@ -70,7 +71,7 @@ const server = http.createServer(async (req, res) => {
       return;
     }
 
-    // Anything else: serve the dashboard files from web/
+    // Anything else: serve the built React dashboard from web/dist
     if (req.method === "GET") return serveStatic(url.pathname, res);
 
     send(res, 405, { error: "Method not allowed" });
@@ -105,9 +106,16 @@ function send(res, status, data) {
   res.end(JSON.stringify(data));
 }
 
-const MIME = { ".html": "text/html", ".js": "text/javascript", ".css": "text/css", ".png": "image/png" };
+const MIME = {
+  ".html": "text/html", ".js": "text/javascript", ".css": "text/css",
+  ".png": "image/png", ".svg": "image/svg+xml", ".ico": "image/x-icon", ".json": "application/json",
+};
 
 function serveStatic(pathname, res) {
+  if (!fs.existsSync(path.join(WEB_DIR, "index.html"))) {
+    res.writeHead(503, { "Content-Type": "text/plain" });
+    return res.end("Dashboard not built yet. Run `npm install` then `npm run build`, or use `npm run dev:web` for development.");
+  }
   const file = path.normalize(path.join(WEB_DIR, pathname === "/" ? "index.html" : pathname));
   if (!file.startsWith(WEB_DIR) || !fs.existsSync(file) || fs.statSync(file).isDirectory()) {
     return send(res, 404, { error: "Not found" });
