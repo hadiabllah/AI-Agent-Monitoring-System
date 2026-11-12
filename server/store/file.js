@@ -44,4 +44,18 @@ function clear() {
   if (fs.existsSync(EVENTS_FILE)) fs.unlinkSync(EVENTS_FILE);
 }
 
-module.exports = { name: "local files (data/events.jsonl)", add, saveRaw, list, clear };
+// Removes every event of one session and rewrites the file without them.
+// Returns how many events were removed.
+function removeSession(agent, sessionId) {
+  const keep = events.filter((e) => !(e.agent === agent && e.sessionId === sessionId));
+  const removed = events.length - keep.length;
+  if (!removed) return 0;
+  events.length = 0;
+  events.push(...keep);
+  const tmp = `${EVENTS_FILE}.tmp`;
+  fs.writeFileSync(tmp, keep.map((e) => JSON.stringify(e) + "\n").join(""));
+  fs.renameSync(tmp, EVENTS_FILE);
+  return removed;
+}
+
+module.exports = { name: "local files (data/events.jsonl)", add, saveRaw, list, clear, removeSession };

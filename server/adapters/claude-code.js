@@ -30,7 +30,15 @@ function normalizeClaudeCode(raw) {
     }
 
     case "Notification":
+      // Claude Code stops and waits when it needs your permission or an answer: show
+      // the session as paused until the next event arrives.
+      if (isBlockingNotification(raw)) {
+        return makeEvent({ ...base, type: "waiting", summary: truncate(raw.message || "Waiting for your approval") });
+      }
       return makeEvent({ ...base, type: "message", summary: truncate(raw.message || "Notification") });
+
+    case "SessionEnd":
+      return makeEvent({ ...base, type: "session_end", status: "completed", summary: `Session ended${raw.reason ? ` (${raw.reason})` : ""}` });
 
     case "Stop":
     case "SubagentStop":
@@ -65,6 +73,13 @@ function describeTool(tool, input) {
     default:
       return { type: "other", summary: tool || "Tool call" };
   }
+}
+
+// Newer Claude Code versions send notification_type; older ones only the message text.
+// "idle_prompt" ("waiting for your input") means the agent finished, so it isn't a pause.
+function isBlockingNotification(raw) {
+  if (raw.notification_type) return ["permission_prompt", "elicitation_dialog"].includes(raw.notification_type);
+  return /permission|approv/i.test(raw.message || "");
 }
 
 function toolFailed(response) {

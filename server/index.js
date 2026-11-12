@@ -58,6 +58,17 @@ const server = http.createServer(async (req, res) => {
       return send(res, 200, { ok: true });
     }
 
+    // DELETE /api/sessions/:agent/:sessionId  ← delete one session and all its events
+    const sessionMatch = url.pathname.match(/^\/api\/sessions\/([\w-]+)\/([^/]+)$/);
+    if (req.method === "DELETE" && sessionMatch) {
+      const agent = sessionMatch[1];
+      const sessionId = decodeURIComponent(sessionMatch[2]);
+      const removed = await store.removeSession(agent, sessionId);
+      if (!removed) return send(res, 404, { error: "Session not found" });
+      broadcast({ type: "__session_deleted", agent, sessionId });
+      return send(res, 200, { ok: true, removed });
+    }
+
     // GET /stream  ← live updates (Server-Sent Events)
     if (req.method === "GET" && url.pathname === "/stream") {
       res.writeHead(200, {

@@ -16,12 +16,21 @@ create table if not exists events (
   agent       text not null,
   type        text not null check (type in (
                 'session_start', 'prompt', 'plan', 'file_read', 'file_edit', 'command',
-                'test', 'search', 'message', 'task_done', 'error', 'other')),
+                'test', 'search', 'message', 'waiting', 'task_done', 'session_end',
+                'error', 'other')),
   status      text check (status in ('started', 'completed', 'failed')),
   summary     text not null,
   raw         jsonb,
   created_at  timestamptz not null default now()
 );
+
+-- Upgrading a database made before 'waiting' and 'session_end' existed: the
+-- "create table if not exists" above leaves the old check in place, so replace it.
+alter table events drop constraint if exists events_type_check;
+alter table events add constraint events_type_check check (type in (
+  'session_start', 'prompt', 'plan', 'file_read', 'file_edit', 'command',
+  'test', 'search', 'message', 'waiting', 'task_done', 'session_end',
+  'error', 'other'));
 
 create index if not exists events_session_time on events (session_id, created_at);
 create index if not exists events_errors on events (created_at) where type = 'error';

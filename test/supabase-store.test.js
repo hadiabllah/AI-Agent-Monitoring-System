@@ -88,3 +88,10 @@ test("a Supabase error is thrown with its message", async () => {
   failNext = true;
   await assert.rejects(store.add(event({ sessionId: "s-new" })), /failed \(400\).*check constraint/);
 });
+
+test("removeSession() deletes one session row (events cascade)", async () => {
+  await store.removeSession("codex", "s 1");
+  const del = requests.find((r) => r.method === "DELETE");
+  assert.strictEqual(del.url, "/rest/v1/sessions?id=eq.s%201&agent=eq.codex");
+  assert.strictEqual(del.headers.prefer, "return=representation");
+});

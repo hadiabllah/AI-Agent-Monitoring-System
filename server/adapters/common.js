@@ -6,7 +6,7 @@
 //   sessionId: the agent's session / thread id
 //   timestamp: ISO string
 //   type:      session_start | prompt | plan | file_read | file_edit | command | test
-//              | search | message | task_done | error | other
+//              | search | message | waiting | task_done | session_end | error | other
 //   status:    started | completed | failed | null
 //   summary:   one human-readable line for the dashboard
 //   cwd:       project folder the agent is working in (if known)

@@ -54,3 +54,20 @@ test("Codex: older item_type / assistant_message format is understood", () => {
   const c = normalizeCodex({ type: "item.completed", item: { id: "c", item_type: "command_execution", command: "ls", exit_code: 0 } }, "s1");
   assert.strictEqual(c.type, "command");
 });
+
+test("Claude Code: a permission prompt pauses the session, an idle prompt does not", () => {
+  const base = { session_id: "s1", cwd: "/app", hook_event_name: "Notification" };
+  assert.strictEqual(normalizeClaudeCode({ ...base, notification_type: "permission_prompt", message: "Claude needs your permission to use Bash" }).type, "waiting");
+  assert.strictEqual(normalizeClaudeCode({ ...base, notification_type: "idle_prompt", message: "Claude is waiting for your input" }).type, "message");
+  // Older Claude Code versions send no notification_type
+  assert.strictEqual(normalizeClaudeCode({ ...base, message: "Claude needs your permission to use Write" }).type, "waiting");
+});
+
+test("session end events from both agents", () => {
+  const cc = normalizeClaudeCode({ session_id: "s1", hook_event_name: "SessionEnd", reason: "prompt_input_exit" });
+  assert.strictEqual(cc.type, "session_end");
+  assert.match(cc.summary, /prompt_input_exit/);
+  const cx = normalizeCodex({ type: "session.ended", exit_code: 0 }, "codex-1");
+  assert.strictEqual(cx.type, "session_end");
+  assert.strictEqual(cx.sessionId, "codex-1");
+});

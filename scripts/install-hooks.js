@@ -18,7 +18,7 @@ const forwarder = path.resolve(__dirname, "..", "hooks", "forward.js").replace(/
 // Use the full path to node: on Windows, hooks run through cmd.exe, which may not find a bare `node`.
 const nodePath = process.execPath.replace(/\\/g, "/");
 const command = `"${nodePath}" "${forwarder}"`;
-const HOOK_EVENTS = ["SessionStart", "UserPromptSubmit", "PreToolUse", "PostToolUse", "Notification", "Stop", "SubagentStop"];
+const HOOK_EVENTS = ["SessionStart", "UserPromptSubmit", "PreToolUse", "PostToolUse", "Notification", "Stop", "SubagentStop", "SessionEnd"];
 const TOOL_EVENTS = new Set(["PreToolUse", "PostToolUse"]);
 
 const settingsDir = path.join(path.resolve(target), ".claude");

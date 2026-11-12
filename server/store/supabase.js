@@ -54,7 +54,7 @@ async function add(event) {
       created_at: event.timestamp,
     },
   });
-  if (event.type === "task_done") {
+  if (event.type === "task_done" || event.type === "session_end") {
     await rest(`sessions?id=eq.${encodeURIComponent(event.sessionId)}`, {
       method: "PATCH",
       prefer: "return=minimal",
@@ -87,4 +87,15 @@ async function clear() {
   knownSessions.clear();
 }
 
-module.exports = { name: `Supabase (${URL_BASE})`, add, saveRaw: fileStore.saveRaw, list, clear };
+// Deletes one session; its events go with it through the foreign key's ON DELETE CASCADE.
+async function removeSession(agent, sessionId) {
+  const id = encodeURIComponent(sessionId);
+  const rows = await rest(`sessions?id=eq.${id}&agent=eq.${encodeURIComponent(agent)}`, {
+    method: "DELETE",
+    prefer: "return=representation",
+  });
+  knownSessions.delete(`${agent}:${sessionId}`);
+  return rows?.length ?? 0;
+}
+
+module.exports = { name: `Supabase (${URL_BASE})`, add, saveRaw: fileStore.saveRaw, list, clear, removeSession };

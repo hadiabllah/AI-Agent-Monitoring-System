@@ -17,6 +17,8 @@ function normalizeCodex(raw, sessionId) {
       return makeEvent({ ...base, type: "prompt", status: "started", summary: "Working on the task" });
     case "turn.completed":
       return makeEvent({ ...base, type: "task_done", status: "completed", summary: "Agent finished the task" });
+    case "session.ended": // sent by scripts/codex-run.js when the Codex process exits
+      return makeEvent({ ...base, type: "session_end", status: "completed", summary: `Session ended${raw.exit_code ? ` (exit code ${raw.exit_code})` : ""}` });
     case "turn.failed":
     case "error":
       return makeEvent({
